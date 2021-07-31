@@ -63,7 +63,7 @@ If creating multiple directories, can use * wildcard for `chown` command
 ```
 $ mkdir /var/cache/mopdiy_<n>
 $ mkdir /var/lib/mopidy_<n>
-$ sudo chown mopidy:audio /var/cache/mopidy_<n> /var/lib/mopidy_<n>
+$ chown mopidy:audio /var/cache/mopidy_<n> /var/lib/mopidy_<n>
 ```
 6. Create copies of the mopidyctl script
 
