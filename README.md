@@ -6,8 +6,8 @@ This enables you to have the flexibility to play one song across multiple speake
 
 ### Prerequistes 
 
-* Mopidy installed
-* Snapcast installed
+* Mopidy installed [Mopidy Github](https://github.com/mopidy/mopidy)
+* Snapcast installed [Snapcast Github](https://github.com/badaix/snapcast)
 
 ## Automatically
 
