@@ -40,6 +40,8 @@ sudo sed -i "/\[stream\]/a pipe:\/\/\/tmp\/snapfifo_$i?name=Stream_$i" /etc/snap
 echo "Executing Step 9"
 sudo "mopidy_$1" local scan
 
+i=$(($i + 1))
+
 done
 
 sudo systemctl restart snapserver.service
