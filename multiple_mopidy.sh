@@ -32,7 +32,7 @@ fi
 echo "hostname = $hostname"
 
 # latest mopidy.conf file doesn't have much content in it.
-if grep -q "^allowed_origins" /etc/mopidy/mopdiy.conf
+if grep -q "^allowed_origins" $coreconfig
 then
     #need to check that we won't write a duplicate host name
     sudo sed -i "/^allowed_origins/ s/$/,$hostname:668$i/" $coreconfig
