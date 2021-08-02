@@ -29,6 +29,7 @@ if test "$host" != ""
 then
     hostname=$host
 else
+    echo "[http]" >> $coreconfig
     echo "hostname = $hostname" >> "$coreconfig"
 fi
 
@@ -45,7 +46,7 @@ then
         sudo sed -i "/^allowed_origins/ s/$/,$hostname:668$i/" $coreconfig
     fi
 else
-    echo "[http]" >> $coreconfig
+    
     echo "allowed_origins = $hostname:6680,$hostname:668$i" >> $coreconfig
 fi
 
