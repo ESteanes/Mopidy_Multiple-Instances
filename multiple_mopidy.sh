@@ -38,7 +38,7 @@ fi
 if grep -q "^allowed_origins" $coreconfig
 then
     #need to check that we won't write a duplicate host name
-    if greq -q "$hostname:668$i" $coreconfig
+    if grep -q "$hostname:668$i" $coreconfig
     then
         echo "allowed origins at $hostname:668$1 already exists"
     else 
@@ -81,6 +81,7 @@ i=1
 while [ $i -le $(($1)) ]; do
 sudo systemctl enable "mopidy_$i.service"
 sudo systemctl start "mopidy_$i.service"
+i=$(($i + 1))
 done
 
 sudo systemctl restart snapserver.service
