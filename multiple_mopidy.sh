@@ -1,10 +1,10 @@
 #!/bin/bash
 
-if  test $2 -eq "" 
+if  test "$2" = "" 
 then
     hostname="127.0.0.1"
 else
-    hostname=$2
+    hostname="$2"
 fi 
 
 coreconfig="/etc/mopidy/mopidy.conf"
@@ -24,8 +24,8 @@ port = 668$i
 output = audioresample ! audioconvert ! audio/x-raw,rate=48000,channels=2,format=S16LE ! filesink location=/tmp/snapfifo_$i " > /etc/mopidy/mopidy_$i.conf
 
 echo "Executing Step 4"
-host=`sudo cat /etc/mopidy.conf | grep "^hostname" | sed "s/^[a-zA-Z =]*//g"`
-if test $host -ne ""
+host=`sudo cat $coreconfig | grep "^hostname" | sed "s/^[a-zA-Z =]*//g"`
+if test "$host" != ""
 then
     hostname=$host
 fi
@@ -41,7 +41,7 @@ else
 fi
 
 echo "Executing Step 5"
-sudo mkdir -p /var/cache/mopdiy_$i
+sudo mkdir -p /var/cache/mopidy_$i
 sudo mkdir -p /var/lib/mopidy_$i
 sudo chown mopidy:audio /var/cache/mopidy_$i /var/lib/mopidy_$i
 
