@@ -70,11 +70,17 @@ then
 fi
 
 echo "Executing Step 9"
-sudo systemctl enable "mopidy_$i.service"
-sudo systemctl start "mopidy_$i.service"
+
 
 i=$(($i + 1))
 
+done
+sudo systemctl restart mopidy.service
+
+i=1
+while [ $i -le $(($1)) ]; do
+sudo systemctl enable "mopidy_$i.service"
+sudo systemctl start "mopidy_$i.service"
 done
 
 sudo systemctl restart snapserver.service
