@@ -28,8 +28,11 @@ host=`sudo cat $coreconfig | grep "^hostname" | sed "s/^[a-zA-Z =]*//g"`
 if test "$host" != ""
 then
     hostname=$host
+else
+    echo "hostname = $hostname" >> "$coreconfig"
 fi
-echo "hostname = $hostname"
+
+
 
 # latest mopidy.conf file doesn't have much content in it.
 if grep -q "^allowed_origins" $coreconfig
@@ -61,14 +64,13 @@ then
 fi
 
 echo "Executing Step 9"
-sudo "mopidy_$1" local scan
+sudo "mopidy_$i" local scan
+sudo systemctl enable mopidy_"$i".service
+sudo systemctl start mopidy_"$i".service
 
 i=$(($i + 1))
 
 done
 
 sudo systemctl restart snapserver.service
-sudo systemctl enable mopidy*.service
-sudo systemctl start mopidy*.service 
-
 echo "Done!"
