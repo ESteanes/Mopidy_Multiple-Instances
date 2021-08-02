@@ -38,7 +38,12 @@ fi
 if grep -q "^allowed_origins" $coreconfig
 then
     #need to check that we won't write a duplicate host name
-    sudo sed -i "/^allowed_origins/ s/$/,$hostname:668$i/" $coreconfig
+    if greq -q "$hostname:668$i" $coreconfig
+    then
+        echo "allowed origins at $hostname:668$1 already exists"
+    else 
+        sudo sed -i "/^allowed_origins/ s/$/,$hostname:668$i/" $coreconfig
+    fi
 else
     echo "allowed_origins = $hostname:6680,$hostname:668$i" >> $coreconfig
 fi
@@ -64,7 +69,6 @@ then
 fi
 
 echo "Executing Step 9"
-sudo "mopidy_$i" local scan
 sudo systemctl enable "mopidy_$i.service"
 sudo systemctl start "mopidy_$i.service"
 
