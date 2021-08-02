@@ -47,7 +47,7 @@ sudo chown mopidy:audio /var/cache/mopidy_$i /var/lib/mopidy_$i
 
 echo "Executing Step 6"
 sudo cp /usr/sbin/mopidyctl /usr/sbin/mopidyctl_$i
-sed -i "s/mopidy.conf\"$/mopidy.conf\:\/etc\/mopidy\/mopidy_1.conf\"/g" /usr/sbin/mopdiyctl_$i
+sed -i "s/mopidy.conf\"$/mopidy.conf\:\/etc\/mopidy\/mopidy_1.conf\"/g" /usr/sbin/mopidyctl_$i
 
 echo "Executing Step 7"
 sudo cp /lib/systemd/system/mopidy.service /lib/systemd/system/mopidy_$i.service
