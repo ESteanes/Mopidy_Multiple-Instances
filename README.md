@@ -12,9 +12,9 @@ This enables you to have the flexibility to play one song across multiple speake
 ## Automatically
 
 ```
-$ bash multiple_mopidy.sh <number of instances>
+$ bash multiple_mopidy.sh <number of instances> <hostname>
 ```
-
+Note: leaving the hostname blank will result in 127.0.0.1 which means that mopidy will only listen to local requests. Generally unfavourable setup.
 ## Manually
 
 \<n> represents the number of instances
