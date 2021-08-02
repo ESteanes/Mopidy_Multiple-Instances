@@ -51,7 +51,7 @@ sed -i "s/mopidy.conf\"$/mopidy.conf\:\/etc\/mopidy\/mopidy_1.conf\"/g" /usr/sbi
 
 echo "Executing Step 7"
 sudo cp /lib/systemd/system/mopidy.service /lib/systemd/system/mopidy_$i.service
-sed -i "s/mopidy.conf$/mopidy.conf\:\/etc\/mopidy\/mopidy_1.conf\"/g" /lib/systemd/system/mopidy_$i.service
+sed -i "s/mopidy.conf$/mopidy.conf\:\/etc\/mopidy\/mopidy_1.conf/g" /lib/systemd/system/mopidy_$i.service
 
 echo "Executing Step 8"
 #need to check we aren't duplicating stream entries
