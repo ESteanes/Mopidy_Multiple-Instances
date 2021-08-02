@@ -65,8 +65,8 @@ fi
 
 echo "Executing Step 9"
 sudo "mopidy_$i" local scan
-sudo systemctl enable mopidy_"$i".service
-sudo systemctl start mopidy_"$i".service
+sudo systemctl enable "mopidy_$i.service"
+sudo systemctl start "mopidy_$i.service"
 
 i=$(($i + 1))
 
