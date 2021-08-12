@@ -23,7 +23,7 @@ Note: leaving the hostname blank will result in 127.0.0.1 which means that mopid
 ```
 $ sudo touch /etc/mopidy/mopidy_<n>.conf
 ```
-2. Using a text editor, edit the file you created and add the following information in your mopdiy_\<n>.conf
+2. Using a text editor, edit the file you created and add the following information in your mopidy_\<n>.conf
 ```
 [core]
 cache_dir = /var/cache/mopidy_<n>
@@ -61,7 +61,7 @@ allowed_origins = <hostname>:6680,<hostname>:668<n> (for all n)
 
 If creating multiple directories, can use * wildcard for `chown` command
 ```
-$ mkdir /var/cache/mopdiy_<n>
+$ mkdir /var/cache/mopidy_<n>
 $ mkdir /var/lib/mopidy_<n>
 $ chown mopidy:audio /var/cache/mopidy_<n> /var/lib/mopidy_<n>
 ```
@@ -70,7 +70,7 @@ $ chown mopidy:audio /var/cache/mopidy_<n> /var/lib/mopidy_<n>
 Creating copies of the mopidyctl script will enable you to run these mopidy instances as a service without having to manually enable them upon reboot.
 
 ```
-$ cp /usr/sbin/mopidyctl /usr/sbin/mopdiyctl_<n>
+$ cp /usr/sbin/mopidyctl /usr/sbin/mopidyctl_<n>
 ```
 Then inside `usr/sbin/mopidyctl_<n>`, change the `CONFIG_FILES` variable to the following:
 ```

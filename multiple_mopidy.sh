@@ -9,8 +9,26 @@ fi
 
 coreconfig="/etc/mopidy/mopidy.conf"
 i=1
+
+host=`sudo grep "^hostname" $coreconfig | sed "s/^[a-zA-Z =]*//g"`
+if test "$host" != ""
+then
+    hostname=$host
+else
+    echo "[http]" >> $coreconfig
+    echo "hostname = $hostname" >> "$coreconfig"
+fi
+
+echo "Checking if snapcast audio config set up"
+audioexists=`sudo grep "^[audio]$" $coreconfig `
+if test "audioexists" -z
+then
+    echo "[audio]" >> $coreconfig
+    echo "output = audioresample ! audioconvert ! audio/x-raw,rate=48000,channels=2,format=S16LE ! filesink location=/tmp/snapfifo"
+fi
+
 while [ $i -le $(($1)) ]; do
-echo "Making additional Mopidy instance: $1"
+echo "Making additional Mopidy instance: $i"
 echo "Executing Steps 1 & 2"
 echo "
 [core]
@@ -24,16 +42,6 @@ port = 668$i
 output = audioresample ! audioconvert ! audio/x-raw,rate=48000,channels=2,format=S16LE ! filesink location=/tmp/snapfifo_$i " > /etc/mopidy/mopidy_$i.conf
 
 echo "Executing Step 4"
-host=`sudo cat $coreconfig | grep "^hostname" | sed "s/^[a-zA-Z =]*//g"`
-if test "$host" != ""
-then
-    hostname=$host
-else
-    echo "[http]" >> $coreconfig
-    echo "hostname = $hostname" >> "$coreconfig"
-fi
-
-
 
 # latest mopidy.conf file doesn't have much content in it.
 if grep -q "^allowed_origins" $coreconfig
@@ -80,8 +88,8 @@ sudo systemctl restart mopidy.service
 
 i=1
 while [ $i -le $(($1)) ]; do
-sudo systemctl enable "mopidy_$i.service"
-sudo systemctl start "mopidy_$i.service"
+sudo systemctl enable mopidy_$i.service
+sudo systemctl start mopidy_$i.service
 i=$(($i + 1))
 done
 
