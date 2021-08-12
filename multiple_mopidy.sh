@@ -24,7 +24,7 @@ audioexists=`sudo grep "^[audio]$" $coreconfig `
 if test "audioexists" -z
 then
     echo "[audio]" >> $coreconfig
-    echo "output = audioresample ! audioconvert ! audio/x-raw,rate=48000,channels=2,format=S16LE ! filesink location=/tmp/snapfifo"
+    echo "output = audioresample ! audioconvert ! audio/x-raw,rate=48000,channels=2,format=S16LE ! filesink location=/tmp/snapfifo" >> $coreconfig
 fi
 
 while [ $i -le $(($1)) ]; do
@@ -65,11 +65,11 @@ sudo chown mopidy:audio /var/cache/mopidy_$i /var/lib/mopidy_$i
 
 echo "Executing Step 6"
 sudo cp /usr/sbin/mopidyctl /usr/sbin/mopidyctl_$i
-sed -i "s/mopidy.conf\"$/mopidy.conf\:\/etc\/mopidy\/mopidy_1.conf\"/g" /usr/sbin/mopidyctl_$i
+sudo sed -i "s/mopidy.conf\"$/mopidy.conf\:\/etc\/mopidy\/mopidy_$i.conf\"/g" /usr/sbin/mopidyctl_$i
 
 echo "Executing Step 7"
 sudo cp /lib/systemd/system/mopidy.service /lib/systemd/system/mopidy_$i.service
-sed -i "s/mopidy.conf$/mopidy.conf\:\/etc\/mopidy\/mopidy_1.conf/g" /lib/systemd/system/mopidy_$i.service
+sudo sed -i "s/mopidy.conf$/mopidy.conf\:\/etc\/mopidy\/mopidy_$i.conf/g" /lib/systemd/system/mopidy_$i.service
 
 echo "Executing Step 8"
 #need to check we aren't duplicating stream entries
@@ -84,7 +84,7 @@ echo "Executing Step 9"
 i=$(($i + 1))
 
 done
-sudo systemctl restart mopidy.service
+
 
 i=1
 while [ $i -le $(($1)) ]; do
@@ -92,6 +92,6 @@ sudo systemctl enable mopidy_$i.service
 sudo systemctl start mopidy_$i.service
 i=$(($i + 1))
 done
-
+sudo systemctl restart mopidy.service
 sudo systemctl restart snapserver.service
 echo "Done!"
