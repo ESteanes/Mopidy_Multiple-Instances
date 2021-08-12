@@ -79,19 +79,11 @@ then
 fi
 
 echo "Executing Step 9"
-
-
-i=$(($i + 1))
-
-done
-
-
-i=1
-while [ $i -le $(($1)) ]; do
 sudo systemctl enable mopidy_$i.service
 sudo systemctl start mopidy_$i.service
 i=$(($i + 1))
 done
+
 sudo systemctl restart mopidy.service
 sudo systemctl restart snapserver.service
 echo "Done!"
