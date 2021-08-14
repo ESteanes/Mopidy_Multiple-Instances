@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/bash
 Help(){
    # Display Help
-   echo "Syntax: scriptTemplate [-H|n|o|r|h|v|V]"
+   echo "Syntax: multiple_mopidy.sh [-H|n|o|r|h|v|V]"
    echo "options:"
    echo "Capital options are required, lower case are not required."
    echo "H     Hostname you want to define"
@@ -20,20 +20,19 @@ VerboseEcho(){
     fi
 }
 CreateInstance(){
-    $i=1
+    i=1
     while [ $i -le $(($numInstance)) ]; do
         echo "Making additional Mopidy instance: $i"
-        VerboseEcho "Executing Steps 1 & 2"
-        echo "
-        [core]
-        cache_dir = /var/cache/mopidy_$i
-        data_dir = /var/lib/mopidy_$i
+        VerboseEcho "Executing Steps 1 & 2"   
+echo "[core]
+cache_dir = /var/cache/mopidy_$i
+data_dir = /var/lib/mopidy_$i
 
-        [http]
-        port = 668$i
+[http]
+port = 668$i
 
-        [audio]
-        $audioOut_$i " > /etc/mopidy/mopidy_$i.conf
+[audio]
+${audioOut}_${i} " > /etc/mopidy/mopidy_$i.conf
         VerboseEcho "Executing Step 4"
         # latest mopidy.conf file doesn't have much content in it.
         if grep -q "^allowed_origins" $coreconfig
@@ -41,7 +40,7 @@ CreateInstance(){
             #need to check that we won't write a duplicate host name
             if grep -q "$hostname:668$i" $coreconfig
             then
-                VerboseEcho "allowed origins at $hostname:668$1 already exists"
+                VerboseEcho "allowed origins at $hostname:668$i already exists"
             else 
                 sudo sed -i "/^allowed_origins/ s/$/,$hostname:668$i/" $coreconfig
             fi
@@ -70,23 +69,26 @@ CreateInstance(){
             sudo sed -i "/\[stream\]/a source = pipe:\/\/\/tmp\/snapfifo_$i?name=Stream_$i" /etc/snapserver.conf
         fi
         VerboseEcho "Executing Step 9"
-        fi
         sudo systemctl enable mopidy_$i.service
         sudo systemctl start mopidy_$i.service
         i=$(($i + 1))
     done
 }
 RemoveInstance(){
-    numInstance=$((`ls /etc/mopidy/ | wc -l` -1))
+    numInstance=$((`ls /etc/mopidy/ | wc -l` - 1))
     i=1
+    VerboseEcho "Removing $numInstance instances"
     while [ $i -le $(($numInstance)) ]; do
         sudo systemctl stop mopidy_$i.service
         sudo systemctl disable mopidy_$i.service
         sudo rm /lib/systemd/system/mopidy_$i.service
         sudo rm /usr/sbin/mopidyctl_$i
+        i=$(($i + 1))
     done
     sudo rm -f /etc/mopidy/mopidy_*.conf
-    sudo sed -i "s/^allowed_origins.*//" $coreconfig 
+    sudo sed -i "s/^allowed_origins.*//" $coreconfig
+    sudo systemctl daemon-reload
+    sudo systemctl reset-failed
 }
 TestBaseConfig(){
     host=`sudo grep "^hostname" $coreconfig | sed "s/^[a-zA-Z =]*//g"`
@@ -99,12 +101,13 @@ TestBaseConfig(){
     fi
 
     VerboseEcho "Checking if snapcast audio config set up"
-    audioexists=`sudo grep "^[audio]$" $coreconfig `
-    if test "audioexists" -z
+    audioexists=`sudo grep "^\[audio\]$" $coreconfig `
+    if test -z "$audioexists" 
     then
         echo "[audio]" >> $coreconfig
         echo $audioOut >> $coreconfig
     fi
+    VerboseEcho "Everything set up alright"
 }
 coreconfig="/etc/mopidy/mopidy.conf"
 numargs=0
@@ -117,7 +120,7 @@ then
     echo "Mopidy isn't installed, please install Mopidy"
 fi
 
-while getopts ":H:n:o:rhv:V:" option; do
+while getopts ":H:N:O:V:rhv" option; do
     case $option in 
         h)
             Help
@@ -129,13 +132,15 @@ while getopts ":H:n:o:rhv:V:" option; do
             numInstance=$OPTARG
         ;;
         O)
-            if test $OPTARG ="snapcast"
+            echo "option out"
+            if test $OPTARG = "snapcast"
             then
+                echo "option out is snapcast"
                 audioOut="output = audioresample ! audioconvert ! audio/x-raw,rate=48000,channels=2,format=S16LE ! filesink location=/tmp/snapfifo"
             fi
         ;;
         r)
-            RemoveInstance=true
+            removeInstance=true
         ;;
         v)
             verbose=true
@@ -161,11 +166,13 @@ then
 fi
 
 TestBaseConfig
-
-if test "$removeInstance"=true
+VerboseEcho "removeInstance = $removeInstance"
+if test "$removeInstance" = true
 then
     RemoveInstance
-else
+elif test $numargs -gt 1
+then
+    echo "creating instance"
     CreateInstance
 fi
 
