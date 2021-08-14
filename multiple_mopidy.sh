@@ -1,89 +1,175 @@
 #!/bin/bash
-
-if  test "$2" = "" 
-then
-    hostname="127.0.0.1"
-else
-    hostname="$2"
-fi 
-
-coreconfig="/etc/mopidy/mopidy.conf"
-i=1
-
-host=`sudo grep "^hostname" $coreconfig | sed "s/^[a-zA-Z =]*//g"`
-if test "$host" != ""
-then
-    hostname=$host
-else
-    echo "[http]" >> $coreconfig
-    echo "hostname = $hostname" >> "$coreconfig"
-fi
-
-echo "Checking if snapcast audio config set up"
-audioexists=`sudo grep "^[audio]$" $coreconfig `
-if test "audioexists" -z
-then
-    echo "[audio]" >> $coreconfig
-    echo "output = audioresample ! audioconvert ! audio/x-raw,rate=48000,channels=2,format=S16LE ! filesink location=/tmp/snapfifo" >> $coreconfig
-fi
-
-while [ $i -le $(($1)) ]; do
-echo "Making additional Mopidy instance: $i"
-echo "Executing Steps 1 & 2"
-echo "
-[core]
-cache_dir = /var/cache/mopidy_$i
-data_dir = /var/lib/mopidy_$i
-
-[http]
-port = 668$i
-
-[audio]
-output = audioresample ! audioconvert ! audio/x-raw,rate=48000,channels=2,format=S16LE ! filesink location=/tmp/snapfifo_$i " > /etc/mopidy/mopidy_$i.conf
-
-echo "Executing Step 4"
-
-# latest mopidy.conf file doesn't have much content in it.
-if grep -q "^allowed_origins" $coreconfig
-then
-    #need to check that we won't write a duplicate host name
-    if grep -q "$hostname:668$i" $coreconfig
-    then
-        echo "allowed origins at $hostname:668$1 already exists"
-    else 
-        sudo sed -i "/^allowed_origins/ s/$/,$hostname:668$i/" $coreconfig
+Help(){
+   # Display Help
+   echo "Syntax: scriptTemplate [-H|n|o|r|h|v|V]"
+   echo "options:"
+   echo "Capital options are required, lower case are not required."
+   echo "H     Hostname you want to define"
+   echo "N     Number of mopidy instances you want"
+   echo "O     Output you want mopidy to go to ([snapcast]/more to be added)"
+   echo "r     Removes all additional instances and clears up /etc/mopdiy/mopidy.conf. Will only clear up files made with the naming scheme found in this script"
+   echo "h     Print this Help."
+   echo "v     Verbose mode."
+   echo "i     Print software version and exit."
+   echo "Only the last of multiple commands will be taken."
+   exit 0
+}
+VerboseEcho(){
+    if test "$verbose" = true ;then
+            echo "$1"
     fi
-else
-    
-    echo "allowed_origins = $hostname:6680,$hostname:668$i" >> $coreconfig
-fi
+}
+CreateInstance(){
+    $i=1
+    while [ $i -le $(($numInstance)) ]; do
+        echo "Making additional Mopidy instance: $i"
+        VerboseEcho "Executing Steps 1 & 2"
+        echo "
+        [core]
+        cache_dir = /var/cache/mopidy_$i
+        data_dir = /var/lib/mopidy_$i
 
-echo "Executing Step 5"
-sudo mkdir -p /var/cache/mopidy_$i
-sudo mkdir -p /var/lib/mopidy_$i
-sudo chown mopidy:audio /var/cache/mopidy_$i /var/lib/mopidy_$i
+        [http]
+        port = 668$i
 
-echo "Executing Step 6"
-sudo cp /usr/sbin/mopidyctl /usr/sbin/mopidyctl_$i
-sudo sed -i "s/mopidy.conf\"$/mopidy.conf\:\/etc\/mopidy\/mopidy_$i.conf\"/g" /usr/sbin/mopidyctl_$i
+        [audio]
+        $audioOut_$i " > /etc/mopidy/mopidy_$i.conf
+        VerboseEcho "Executing Step 4"
+        # latest mopidy.conf file doesn't have much content in it.
+        if grep -q "^allowed_origins" $coreconfig
+        then
+            #need to check that we won't write a duplicate host name
+            if grep -q "$hostname:668$i" $coreconfig
+            then
+                VerboseEcho "allowed origins at $hostname:668$1 already exists"
+            else 
+                sudo sed -i "/^allowed_origins/ s/$/,$hostname:668$i/" $coreconfig
+            fi
+        else
+            
+            echo "allowed_origins = $hostname:6680,$hostname:668$i" >> $coreconfig
+        fi
+        
+        VerboseEcho "Executing Step 5"
+        sudo mkdir -p /var/cache/mopidy_$i
+        sudo mkdir -p /var/lib/mopidy_$i
+        sudo chown mopidy:audio /var/cache/mopidy_$i /var/lib/mopidy_$i
+        
+        VerboseEcho "Executing Step 6"
+        sudo cp /usr/sbin/mopidyctl /usr/sbin/mopidyctl_$i
+        sudo sed -i "s/mopidy.conf\"$/mopidy.conf\:\/etc\/mopidy\/mopidy_$i.conf\"/g" /usr/sbin/mopidyctl_$i
 
-echo "Executing Step 7"
-sudo cp /lib/systemd/system/mopidy.service /lib/systemd/system/mopidy_$i.service
-sudo sed -i "s/mopidy.conf$/mopidy.conf\:\/etc\/mopidy\/mopidy_$i.conf/g" /lib/systemd/system/mopidy_$i.service
+        VerboseEcho "Executing Step 7"
+        sudo cp /lib/systemd/system/mopidy.service /lib/systemd/system/mopidy_$i.service
+        sudo sed -i "s/mopidy.conf$/mopidy.conf\:\/etc\/mopidy\/mopidy_$i.conf/g" /lib/systemd/system/mopidy_$i.service
 
-echo "Executing Step 8"
-#need to check we aren't duplicating stream entries
-if test `sudo grep "pipe:\/\/\/tmp\/snapfifo_$i" /etc/snapserver.conf | wc -l` -eq 0
+        VerboseEcho "Executing Step 8"
+        #need to check we aren't duplicating stream entries
+        if test `sudo grep "pipe:\/\/\/tmp\/snapfifo_$i" /etc/snapserver.conf | wc -l` -eq 0
+        then
+            sudo sed -i "/\[stream\]/a source = pipe:\/\/\/tmp\/snapfifo_$i?name=Stream_$i" /etc/snapserver.conf
+        fi
+        VerboseEcho "Executing Step 9"
+        fi
+        sudo systemctl enable mopidy_$i.service
+        sudo systemctl start mopidy_$i.service
+        i=$(($i + 1))
+    done
+}
+RemoveInstance(){
+    numInstance=$((`ls /etc/mopidy/ | wc -l` -1))
+    i=1
+    while [ $i -le $(($numInstance)) ]; do
+        sudo systemctl stop mopidy_$i.service
+        sudo systemctl disable mopidy_$i.service
+        sudo rm /lib/systemd/system/mopidy_$i.service
+        sudo rm /usr/sbin/mopidyctl_$i
+    done
+    sudo rm -f /etc/mopidy/mopidy_*.conf
+    sudo sed -i "s/^allowed_origins.*//" $coreconfig 
+}
+TestBaseConfig(){
+    host=`sudo grep "^hostname" $coreconfig | sed "s/^[a-zA-Z =]*//g"`
+    if test "$host" != ""
+    then
+        hostname=$host
+    else
+        echo "[http]" >> $coreconfig
+        echo "hostname = $hostname" >> "$coreconfig"
+    fi
+
+    VerboseEcho "Checking if snapcast audio config set up"
+    audioexists=`sudo grep "^[audio]$" $coreconfig `
+    if test "audioexists" -z
+    then
+        echo "[audio]" >> $coreconfig
+        echo $audioOut >> $coreconfig
+    fi
+}
+coreconfig="/etc/mopidy/mopidy.conf"
+numargs=0
+#checking to make sure the files are installed
+if ! command -v snapserver &> /dev/null
 then
-    sudo sed -i "/\[stream\]/a source = pipe:\/\/\/tmp\/snapfifo_$i?name=Stream_$i" /etc/snapserver.conf
+    echo "Snapserver isn't installed, please install snapserver"
+elif ! command -v mopidy &> /dev/null
+then
+    echo "Mopidy isn't installed, please install Mopidy"
 fi
 
-echo "Executing Step 9"
-sudo systemctl enable mopidy_$i.service
-sudo systemctl start mopidy_$i.service
-i=$(($i + 1))
+while getopts ":H:n:o:rhv:V:" option; do
+    case $option in 
+        h)
+            Help
+        ;;
+        H)
+            hostname=$OPTARG
+        ;;
+        N)
+            numInstance=$OPTARG
+        ;;
+        O)
+            if test $OPTARG ="snapcast"
+            then
+                audioOut="output = audioresample ! audioconvert ! audio/x-raw,rate=48000,channels=2,format=S16LE ! filesink location=/tmp/snapfifo"
+            fi
+        ;;
+        r)
+            RemoveInstance=true
+        ;;
+        v)
+            verbose=true
+        ;;
+        i)
+            echo "Version 1 of multiple_mopidy.sh"
+            exit 0
+        ;;
+        \?) #invalid option
+            echo "Error: invalid option -$OPTARG">&2
+            exit 1
+        ;;
+        :)
+            echo "Option -$OPTARG requires an argument.">&2
+        ;;
+    esac
+    numargs=$(($numargs+1))
 done
+
+if test $numargs -eq 0
+then
+    Help
+fi
+
+TestBaseConfig
+
+if test "$removeInstance"=true
+then
+    RemoveInstance
+else
+    CreateInstance
+fi
 
 sudo systemctl restart mopidy.service
 sudo systemctl restart snapserver.service
-echo "Done!"
+VerboseEcho "Done!"
+exit 0
