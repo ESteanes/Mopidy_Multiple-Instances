@@ -140,6 +140,10 @@ while getopts ":H:N:O:V:rhv" option; do
             then
                 echo "Please specify a number greater than 0"
                 exit 1
+            elif test $numInstance -gt 9
+            then
+                echo "Please specify a number less than 10"
+                exit 1
             fi
         ;;
         O)
