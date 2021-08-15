@@ -24,7 +24,7 @@ CreateInstance(){
     while [ $i -le $(($numInstance)) ]; do
         echo "Making additional Mopidy instance: $i"
         VerboseEcho "Executing Steps 1 & 2"   
-echo "[core]
+        echo "[core]
 cache_dir = /var/cache/mopidy_$i
 data_dir = /var/lib/mopidy_$i
 
@@ -130,6 +130,11 @@ while getopts ":H:N:O:V:rhv" option; do
         ;;
         N)
             numInstance=$OPTARG
+            if test $numInstance -lt 1
+            then
+                echo "Please specify a number greater than 0"
+                exit 1
+            fi
         ;;
         O)
             echo "option out"
@@ -164,6 +169,7 @@ if test $numargs -eq 0
 then
     Help
 fi
+
 
 TestBaseConfig
 VerboseEcho "removeInstance = $removeInstance"
