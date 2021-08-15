@@ -68,7 +68,11 @@ ${audioOut}_${i} " > /etc/mopidy/mopidy_$i.conf
         then
             sudo sed -i "/\[stream\]/a source = pipe:\/\/\/tmp\/snapfifo_$i?name=Stream_$i" /etc/snapserver.conf
         fi
-        VerboseEcho "Executing Step 9"
+        i=$(($i + 1))
+    done
+    VerboseEcho "Enabling all the services"
+    i=1
+    while [ $i -le $(($numInstance)) ]; do
         sudo systemctl enable mopidy_$i.service
         sudo systemctl start mopidy_$i.service
         i=$(($i + 1))
