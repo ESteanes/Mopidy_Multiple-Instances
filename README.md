@@ -12,7 +12,8 @@ This enables you to have the flexibility to play one song across multiple speake
 ## Automatically
 
 ```
-$ bash multiple_mopidy.sh <number of instances> <hostname>
+$ wget https://github.com/ESteanes/Mopidy_Multiple-Instances/releases/download/v0.1.0/multiple_mopidy.sh
+$ bash multiple_mopidy.sh -N <number of instances> -H <hostname> -O snapcast
 ```
 Note: leaving the hostname blank will result in 127.0.0.1 which means that mopidy will only listen to local requests. Generally unfavourable setup.
 ## Manually
