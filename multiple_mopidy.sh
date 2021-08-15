@@ -119,9 +119,11 @@ numargs=0
 if ! command -v snapserver &> /dev/null
 then
     echo "Snapserver isn't installed, please install snapserver"
+    exit 1
 elif ! command -v mopidy &> /dev/null
 then
     echo "Mopidy isn't installed, please install Mopidy"
+    exit 1
 fi
 
 while getopts ":H:N:O:V:rhv" option; do
