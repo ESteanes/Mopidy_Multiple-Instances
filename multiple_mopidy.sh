@@ -46,7 +46,7 @@ ${audioOut}_${i} " > /etc/mopidy/mopidy_$i.conf
             fi
         else
             
-            echo "allowed_origins = $hostname:6680,$hostname:668$i" >> $coreconfig
+            sudo sed -i "/\[http\]/a allowed_origins = $hostname:6680,$hostname:668$i" >> $coreconfig
         fi
         
         VerboseEcho "Executing Step 5"
